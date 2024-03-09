@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+	<title>Items API</title>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/core.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
+	<script src="app.js" defer></script>
+	<link rel="stylesheet" href="app.css">
+</head>
+<body>
+	
+	<div class="page">
+		
+		<header class="header">
+			
+			<div class="filter">
+				<div class="filter-title">Filter: </div>
+				<div class="filter-list">
+					<div class="filter-item" data="name">
+						<label>Product</label>
+						<input type="text" name="product" class="filter-item-input">
+					</div>
+					<div class="filter-item" data="price">
+						<label>Price</label>
+						<input type="text" name="price" class="filter-item-input">
+					</div>
+					<div class="filter-item" data="brand">
+						<label>Brand</label>
+						<input type="text" name="brand" class="filter-item-input">
+					</div>
+				</div>
+
+				<div class="filter-submit">Go</div>
+				<div class="filter-clear">Clear</div>
+
+			</div>
+		</header>
+
+		<main class="main-content">
+			
+			<div class="products">
+				<div class="products-list">
+					<!-- генерация элементов -->
+				</div>
+				<div class="pagination">
+					<div class="title">Pages:</div>
+					<div class="pagination-list">
+						<!-- генерация элементов -->
+					</div>
+				</div>
+			</div>
+
+		</main>
+
+		<footer class="footer"></footer>
+
+	</div>
+
+</body>
+</html>
