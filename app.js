@@ -1,6 +1,7 @@
 "use strict";
 
-const host = 'http://api.valantis.store:40000/';
+// const host = 'http://api.valantis.store:40000/';
+const host = 'https://api.valantis.store:41000/';
 const password = 'Valantis';
 const stamp = new Date().toISOString().slice(0,10).replace(/-/g,"");
 const hash = CryptoJS.MD5(`${password}_${stamp }`);
