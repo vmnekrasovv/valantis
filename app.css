@@ -27,7 +27,7 @@ html, body {
 }
 
 .header {
-	height: 80px;
+	min-height: 80px;
 	padding: 20px;
 	background: #222;
 }
@@ -36,19 +36,20 @@ html, body {
 	padding-top: 10px;
 	padding-left: 10px;
 	display: flex;
-	gap: 20px;
+	flex-wrap: wrap;
+	gap: 50px;
 }
 
 .filter-title {
 	padding-top: 3px;
     font-size: 19px;
     color: #aaa;
-    margin-right: 20px;
 }
 
 .filter-list {
 	display: flex;
-	gap: 10px;
+	flex-wrap: wrap;
+	gap: 30px;
 }
 
 .filter-item {
@@ -56,7 +57,7 @@ html, body {
 	color: #fff;
 	cursor: pointer;
 	display: flex;
-	gap: 10px;
+	gap: 15px;
 	align-items: center;
 }
 
@@ -64,15 +65,21 @@ input {
 	padding: 7px 10px;
 }
 
+.filter-buttons {
+	display: flex;
+	gap: 20px;
+}
+
 .filter-submit,
 .filter-clear {
 	padding: 5px 20px;
-	color: #333;
 	font-weight: 700;
 	font-size: 15px;
-	background: #fff;
 	user-select: none;
 	cursor: pointer;
+	background: #333;
+    color: #9fe11f;
+    border-radius: 5px;
 }
 
 .filter-clear {
@@ -86,8 +93,10 @@ input {
 }
 
 .products {
+	min-height: 300px;
+	margin-top: 20px;
+	padding: 0 0 300px 0;
 	position: relative;
-	padding: 30px 20px 300px;
 	background: #242424;
 }
 
@@ -170,4 +179,34 @@ input {
 	height: 100px;
 	padding: 20px;
 	background: #222;
+}
+
+@media screen and (max-width: 1200px) {
+
+	.filter {
+		flex-direction: column;
+	}
+	
+	.filter-list {
+		gap: 20px;
+	}
+
+	.filter-item {
+		width: 100%;
+	}
+
+	.filter-item label {
+		min-width: 70px;
+	}
+
+	.filter-submit,
+	.filter-clear {
+		width: 127px;
+		text-align: center;
+		padding: 7px;
+	}
+
+	.main-content {
+		padding: 0px;
+	}
 }
