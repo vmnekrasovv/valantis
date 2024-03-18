@@ -1,7 +1,7 @@
 "use strict";
 
-// const host = 'http://api.valantis.store:40000/';
-const host = 'https://api.valantis.store:41000/';
+const host = 'http://api.valantis.store:40000/';
+//const host = 'https://api.valantis.store:41000/';
 const password = 'Valantis';
 const stamp = new Date().toISOString().slice(0,10).replace(/-/g,"");
 const hash = CryptoJS.MD5(`${password}_${stamp }`);
@@ -17,63 +17,65 @@ let config = {
 }
 
 let page = 1;
+let reset_flag = false;
+let filter_flag = false;
 let filter = false;
-
+let filter_applied = false;
 
 async function main(){
 
-	reset();
-	
+	reset_flag_func();
+
+	console.log('reset_flag: ' + reset_flag + ' - на входе в main');
+	console.log('filter_flag: ' + filter_flag + ' - на входе в main');
+
 	let ids = await get_ids();
 
-	async function check_ids(){
-
-		ids = await get_ids();	
-		
-		if(ids === undefined){	
-			await check_ids();
-		} else {return ids;}
-	}	
-
-	await check_ids();
- 
-	if(filter === false){
-		for (let i = 0; i < ids.length; i += 50) {
-			if(filter === false) {
-				let response = await get_items(ids.slice(i, i + 50));
-			} else { 
-				reset();
-				break;
-			}
-		}
-	}	
-}
-
-main();
-
-
-async function main_filter(){
-
-	reset();
-
- 	let ids = await get_ids();
-
- 	async function check_ids(){
-
-		ids = await get_ids();	
-		
-		if(ids === undefined){	
-			await check_ids();
-		} else {return ids;}
-	}	
-
-	await check_ids();
-
 	for (let i = 0; i < ids.length; i += 50) {
-		let response = await get_items(ids.slice(i, i + 50));
+		
+		let items = await get_items(ids.slice(i, i + 50));
+
+		if (reset_flag) {
+			reset_flag = false;
+			break; 
+		} 
+
+		else if(filter_flag){
+			filter_flag = false;
+			break;
+		}
+
+		else { 
+			console.log('else render');
+			render(items);
+		}
 	}
 
+	console.log('Завершение main');
+
+	/*reset_flag = false;
+	filter = false;
+	filter_flag = false;*/
+
+	console.log('reset_flag: ' +  reset_flag + ' - на выходе из main');
+	console.log('filter_flag: ' + filter_flag + ' - на выходе из main');
+
 }
+
+let promise = main();
+
+
+/*
+	reset_flag флаг нужен для прерывания цикла в main, если запускали без фильтра
+
+*/
+
+
+/////////////////////////////////////////
+
+
+// get_ids 
+
 
 
 async function get_ids(){
@@ -91,136 +93,195 @@ async function get_ids(){
 		
 	}
 
-	let response = await fetch(host, config);
+	try {
+		
+		let response = await fetch(host, config);
 
-	if (response.ok) {
+		while (!response.ok) {
+			console.log(response.status + " : " + response.statusText);
+			console.log('Promise resolved but HTTP status failed - get_ids');
+			response = await fetch(host, config);
+		}
+
+		console.log('Promise resolved and HTTP status is successful - get_ids');
+		console.log('========================================================');
+		console.log(' ');
+		console.log(' ');
+
 		let ids = await response.json();
-		ids = ids.result;
-		return ids;
-	} 
-
-	else {
-		console.log(response.status + " : " + response.statusText + ' - get_ids');
-		await get_ids();
+		return ids.result;
+	}
+	catch (error){
+		console.error('Promise rejected ' + error);
 	}
 }
+
+/////////////////////////////////////////
+
+
+// get_items 
+
 
 async function get_items(ids){
 
-	config.body = JSON.stringify({'action': 'get_items', 'params': {'ids': ids}});
-	
-	let response = await fetch(host, config);
+	console.log(ids[0], ' ( запуск get_items )');
 
-	if(response.ok){
+	config.body = JSON.stringify({'action': 'get_items', 'params': {'ids': ids}});
+
+	try {
+
+		let response = await fetch(host, config);
+
+		while (!response.ok) {
+			
+			console.log(response.status + " : " + response.statusText);
+			console.log('Promise resolved but HTTP status failed - get_items');
+			
+			response = await fetch(host, config);
+		}
+
+		console.log('Promise resolved and HTTP status is successful - get_items - ( response.ok await fetch() ) - ', ids[0]);
+		console.log('----------------------------------------------------------');
 
 		let items = await response.json();
+		
 		items = clean_items(items.result);
 
+		console.log(' ---- return items ---- ', items[0]);
+		
+		return items;
+	} 
 
-	// render 
-
-		let item_box = document.createElement('div');
-
-		if(page === 1){
-			item_box.className = 'item-box item-box-' + page + ' active';
-		} else {
-			item_box.className = 'item-box item-box-' + page;
-		}
-
-		document.querySelector('.products-list').append(item_box);
-
-		for(let i = 0; i < items.length; i++){
-			render_items(items[i], page);
-		}
-
-		render_pagination();
-
-		page++;
-
-	} else {
-		console.log(response.status + " : " + response.statusText + ' - get_items');
-		get_items(ids);
+	catch (error) {
+		console.log(error);
 	}
 }
 
 
-//////////////// фильтер выдачи //////////////////////////////////
+/////////////////////////////////////////
+
+// фильтер выдачи 
 
 
-async function filter_event(){
-
-	let filter_input = document.querySelectorAll('.filter-item-input');
-	let filter_submit = document.querySelector('.filter-submit');
-	let filter_clear = document.querySelector('.filter-clear');
+let filter_input = document.querySelectorAll('.filter-item-input');
+let filter_submit = document.querySelector('.filter-submit');
+let filter_clear = document.querySelector('.filter-clear');
 
 
-	for(let i = 0; i < filter_input.length; i++){
+for(let i = 0; i < filter_input.length; i++){
+
+	let elem = filter_input[i];
+
+	elem.addEventListener('change', function(){
+
+		if(elem.value !== ''){
+			for(let j = 0; j < filter_input.length; j++){
+				if(j !== i){
+					filter_input[j].setAttribute('disabled', 'disabled');
+				}
+			}
+		} else {
+			for(let j = 0; j < filter_input.length; j++){
+				filter_input[j].removeAttribute('disabled');
+			}
+		}
+
+	});
+}
+
+
+filter_submit.addEventListener('click', function(){
+
+	filter = false;
+	filter_flag = false;
 	
+	for(let i = 0; i < filter_input.length; i++){
+
 		let elem = filter_input[i];
 
-		elem.addEventListener('change', async function(){
+		if(elem.value !== '') {
 
-			if(elem.value !== ''){
-				for(let j = 0; j < filter_input.length; j++){
-					if(j !== i){
-						filter_input[j].setAttribute('disabled', 'disabled');
-					}
-				}
+			filter = new Array;
+			
+			let filter_name = elem.getAttribute('name');
+			filter['name'] = filter_name;
+			
+			if(filter_name == 'price'){
+				filter['value'] = Number(elem.value);
 			} else {
-				for(let j = 0; j < filter_input.length; j++){
-					filter_input[j].removeAttribute('disabled');
-				}
-			}
+				filter['value'] = elem.value.trim();
+			}	
 
+			filter_flag = true;
+			break;
+		} 
+	}
+	
+	promise.then(() => {
+
+		console.log(' ');
+		console.log(' ');
+		console.log('*******************************');
+		console.log('Предыдущий запуск main завершен - filter_submit');
+		console.log('*******************************');
+		console.log(' ');
+		console.log(' ');
+
+		promise = main();
+
+		promise.then(() => {
+			filter_applied = true;
 		});
+	});
+});
+
+filter_clear.addEventListener('click', function(){
+
+	filter_input.forEach(function(elem){
+		elem.value = '';
+		elem.removeAttribute('disabled');
+	});
+
+	filter = false;
+	filter_flag = false; 
+	
+	console.log(' ------- filter_clear.click ---------');
+
+	if(!filter_applied){
+		reset_flag = true;
+	} else {
+		filter_applied = false;
 	}
 
+	promise.then(() => {
 
-	filter_submit.addEventListener('click', async function(){
-		
-		for(let i = 0; i < filter_input.length; i++){
+		console.log(' ');
+		console.log(' ');
+		console.log('*******************************');
+		console.log('Предыдущий запуск main завершен - filter_clear');
+		console.log('*******************************');
+		console.log(' ');
+		console.log(' ');
 
-			let elem = filter_input[i];
-
-			if(elem.value !== '') {
-
-				filter = new Array;
-				
-				let filter_name = elem.getAttribute('name');
-				filter['name'] = filter_name;
-				
-				if(filter_name == 'price'){
-					filter['value'] = Number(elem.value);
-				} else {
-					filter['value'] = elem.value.trim();
-				}	
-
-				break;
-			} else {
-				filter = false;
-			}
-		}
-
-		if(filter !== false){
-			await main_filter();
-		} else { await main(); }
-
+		promise = main();
 	});
 
-	filter_clear.addEventListener('click', async function(){
+});
 
-		filter_input.forEach(function(elem){
-			elem.value = '';
-			elem.removeAttribute('disabled');
-		});
 
-		filter = false;
+/////////////////////////////////////////
 
-		await main();
-	});
+
+// сброс при изменении полей фильтра 
+
+function reset_flag_func(){
+	page = 1;
+	document.querySelector('.products-list').innerHTML = "";
+	document.querySelector('.pagination-list').innerHTML = "";
 }
 
-filter_event();
+
+/////////////////////////////////////////
 
 
 // перебор массива items.result с отсечением дублей по айди
@@ -250,8 +311,30 @@ function clean_items(items){
 	return items;
 }
 
+/////////////////////////////////////////
 
-///////////// рендер элементов ///////////////////
+
+// рендер айтем бокса
+
+
+function render_itemBox(){
+
+	let item_box = document.createElement('div');
+
+	if(page === 1){
+		item_box.className = 'item-box item-box-' + page + ' active';
+	} else {
+		item_box.className = 'item-box item-box-' + page;
+	}
+
+	document.querySelector('.products-list').append(item_box);
+}
+
+
+/////
+
+
+// рендер элементов 
 
 function render_items(items_item){
 
@@ -281,8 +364,9 @@ function render_items(items_item){
 	document.querySelector('.item-box-'+page).append(item);
 }
 
+/////
 
-///////////// рендер пагинации ///////////////////
+// рендер пагинации
 
 function render_pagination(){
 
@@ -293,8 +377,30 @@ function render_pagination(){
 		document.querySelector('.pagination-list').append(pagination_page);
 }
 
+/////
 
-/////////////// событие клика по элементам пагинации ///////////////
+// рендер всего
+
+function render(items){
+
+	render_itemBox();
+
+	for(let i = 0; i < items.length; i++){
+		render_items(items[i], page);
+	}
+
+	render_pagination();
+
+	page++;
+
+	console.log('************************ render ******************************');
+	console.log(' ');
+}
+
+/////////////////////////////////////////
+
+
+// событие клика по элементам пагинации
 
 let pagination = document.querySelector('.pagination-list');
 
@@ -318,10 +424,6 @@ pagination.addEventListener('DOMNodeInserted', function(event) {
 }, false);
 
 
-////////////////// сброс при изменении полей фильтра ///////////////////////
+/////////////////////////////////////////
 
-function reset(){
-	page = 1;
-	document.querySelector('.products-list').innerHTML = "";
-	document.querySelector('.pagination-list').innerHTML = "";
-}
+
