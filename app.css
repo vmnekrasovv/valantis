@@ -55,14 +55,18 @@ html, body {
 .filter-item {
 	font-size: 15px;
 	color: #fff;
-	cursor: pointer;
 	display: flex;
 	gap: 15px;
 	align-items: center;
 }
 
-input {
+.filter-item-input {
 	padding: 7px 10px;
+}
+
+.filter-item-input:disabled {
+	background: #333;
+	color: #9fe11f;
 }
 
 .filter-buttons {

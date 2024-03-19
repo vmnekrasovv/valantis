@@ -22,12 +22,18 @@ let filter_flag = false;
 let filter = false;
 let filter_applied = false;
 
-async function main(){
+async function main(initiator){
+
+	console.log(' ');
+	console.log('########################### Запуск main ###########################');
+	console.log(' ');
 
 	reset_flag_func();
 
-	console.log('reset_flag: ' + reset_flag + ' - на входе в main');
-	console.log('filter_flag: ' + filter_flag + ' - на входе в main');
+	console.log('reset_flag: ' + reset_flag);
+	console.log('filter_flag: ' + filter_flag);
+	console.log('filter: ' + filter['name']);
+	console.log('filter_applied: ' + filter_applied);
 
 	let ids = await get_ids();
 
@@ -36,39 +42,42 @@ async function main(){
 		let items = await get_items(ids.slice(i, i + 50));
 
 		if (reset_flag) {
+			console.log('!!!!!!!! сработал флаг reset !!!!!! ' + reset_flag);
 			reset_flag = false;
+			console.log('!!!!!!!! сброс флага перед break - reset_flag: ' + reset_flag);
 			break; 
 		} 
 
 		else if(filter_flag){
+			console.log('!!!!!!!! сработал флаг filter !!!!!! ' + filter_flag);
 			filter_flag = false;
+			console.log('!!!!!!!! сброс флага перед break - filter_flag: ' + filter_flag);
 			break;
 		}
 
 		else { 
-			console.log('else render');
+			console.log(' --- reset_flag: ' + reset_flag);
+			console.log(' --- filter_flag: ' + filter_flag);
 			render(items);
 		}
 	}
 
-	console.log('Завершение main');
 
-	/*reset_flag = false;
-	filter = false;
-	filter_flag = false;*/
-
+	console.log(' ');
 	console.log('reset_flag: ' +  reset_flag + ' - на выходе из main');
 	console.log('filter_flag: ' + filter_flag + ' - на выходе из main');
+	console.log('filter: ' + filter['name'] + ' - на выходе - нужен при перезапуске с применением фильтра');
+	console.log('filter_applied: ' + filter_applied + ' - на выходе');
+	
+	console.log(' ');
+	console.log('###################### Завершение main ###########################');
+	console.log(' ');
+
+	return initiator;
 
 }
 
-let promise = main();
-
-
-/*
-	reset_flag флаг нужен для прерывания цикла в main, если запускали без фильтра
-
-*/
+let promise = main('main');
 
 
 /////////////////////////////////////////
@@ -103,9 +112,10 @@ async function get_ids(){
 			response = await fetch(host, config);
 		}
 
+		console.log(' ');
+		console.log('========================================================');
 		console.log('Promise resolved and HTTP status is successful - get_ids');
 		console.log('========================================================');
-		console.log(' ');
 		console.log(' ');
 
 		let ids = await response.json();
@@ -123,6 +133,8 @@ async function get_ids(){
 
 
 async function get_items(ids){
+
+	console.log('***********************************************************************************************');
 
 	console.log(ids[0], ' ( запуск get_items )');
 
@@ -216,21 +228,35 @@ filter_submit.addEventListener('click', function(){
 			break;
 		} 
 	}
+
+	if(filter_flag){
+		for(let i = 0; i < filter_input.length; i++){
+			filter_input[i].setAttribute('disabled', 'disabled');
+		}
+	}
 	
-	promise.then(() => {
+	promise.then((init) => {
 
-		console.log(' ');
 		console.log(' ');
 		console.log('*******************************');
-		console.log('Предыдущий запуск main завершен - filter_submit');
+		console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit - lvl 1');
 		console.log('*******************************');
 		console.log(' ');
-		console.log(' ');
 
-		promise = main();
+		// filter_flag = false;
 
-		promise.then(() => {
+		promise = main('filter_submit');
+
+		promise.then((init) => {
+
+			console.log(' ');
+			console.log('*******************************');
+			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit - lvl 2');
+			console.log('*******************************');
+			console.log(' ');
+
 			filter_applied = true;
+			//filter_flag = false;
 		});
 	});
 });
@@ -248,22 +274,34 @@ filter_clear.addEventListener('click', function(){
 	console.log(' ------- filter_clear.click ---------');
 
 	if(!filter_applied){
+		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на входе');
 		reset_flag = true;
+		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на выходе');
 	} else {
+		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на входе');
 		filter_applied = false;
+		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на выходе');
 	}
 
-	promise.then(() => {
+	console.log('------------------------------------------------------------------------------------------');
+
+	promise.then((init) => {
 
 		console.log(' ');
-		console.log(' ');
 		console.log('*******************************');
-		console.log('Предыдущий запуск main завершен - filter_clear');
+		console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_clear - lvl 1');
 		console.log('*******************************');
-		console.log(' ');
 		console.log(' ');
 
-		promise = main();
+		promise = main('filter_clear');
+
+		promise.then((init) => {
+			console.log(' ');
+			console.log('*******************************');
+			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_clear  - lvl 2');
+			console.log('*******************************');
+			console.log(' ');
+		});
 	});
 
 });
@@ -393,7 +431,7 @@ function render(items){
 
 	page++;
 
-	console.log('************************ render ******************************');
+	console.log('*************************************** render complete ***************************************');
 	console.log(' ');
 }
 
