@@ -17,24 +17,31 @@ let config = {
 }
 
 let page = 1;
+let reset = false;
 let reset_flag = false;
-let filter_flag = false;
 let filter = false;
-let filter_applied = false;
 let stop_flag = false;
+let flawless = false;
+
+let promise_filter_submit = false;
+let promise_filter_clear = false;
+
 
 async function main(initiator){
+
+	reset_flag = false;
 
 	console.log(' ');
 	console.log('########################### Запуск main ###########################');
 	console.log(' ');
+	console.log('initiator: ' + initiator);
+	console.log(' ');
+
 
 	reset_flag_func();
 
-	console.log('reset_flag: ' + reset_flag);
-	console.log('filter_flag: ' + filter_flag);
+	console.log('reset: ' + reset);
 	console.log('filter: ' + filter['name']);
-	console.log('filter_applied: ' + filter_applied);
 
 	let ids = await get_ids();
 
@@ -42,17 +49,9 @@ async function main(initiator){
 		
 		let items = await get_items(ids.slice(i, i + 50));
 
-		if (reset_flag) {
-			console.log('!!!!!!!! сработал флаг reset !!!!!! ' + reset_flag);
-			reset_flag = false;
-			console.log('!!!!!!!! сброс флага перед break - reset_flag: ' + reset_flag);
-			break; 
-		} 
-
-		else if(filter_flag){
-			console.log('!!!!!!!! сработал флаг filter !!!!!! ' + filter_flag);
-			filter_flag = false;
-			console.log('!!!!!!!! сброс флага перед break - filter_flag: ' + filter_flag);
+		if(reset) {
+			reset = false;
+			reset_flag = true;
 			break;
 		}
 
@@ -61,18 +60,18 @@ async function main(initiator){
 		}
 
 		else { 
-			console.log(' --- reset_flag: ' + reset_flag);
-			console.log(' --- filter_flag: ' + filter_flag);
+			console.log(' --- reset: ' + reset);
 			render(items);
 		}
 	}
 
 
+
+
 	console.log(' ');
+	console.log('reset: ' +  reset + ' - на выходе из main');
 	console.log('reset_flag: ' +  reset_flag + ' - на выходе из main');
-	console.log('filter_flag: ' + filter_flag + ' - на выходе из main');
 	console.log('filter: ' + filter['name'] + ' - на выходе - нужен при перезапуске с применением фильтра');
-	console.log('filter_applied: ' + filter_applied + ' - на выходе');
 	
 	console.log(' ');
 	console.log('initiator: ' + initiator);
@@ -92,7 +91,6 @@ let promise = main('main');
 
 
 // get_ids 
-
 
 
 async function get_ids(){
@@ -216,10 +214,6 @@ for(let i = 0; i < filter_input.length; i++){
 
 
 filter_submit.addEventListener('click', function(){
-
-	// повторное применение фильтра, без промежуточного clear
-	//filter = false;
-	//filter_flag = false;
 	
 	for(let i = 0; i < filter_input.length; i++){
 
@@ -238,40 +232,51 @@ filter_submit.addEventListener('click', function(){
 				filter['value'] = elem.value.trim();
 			}	
 
-			filter_flag = true;
+			if(!flawless) reset = true;
+
 			break;
 		} 
 	}
 
-	if(filter_flag){
+	if(filter['name']){
 		for(let i = 0; i < filter_input.length; i++){
 			filter_input[i].setAttribute('disabled', 'disabled');
 		}
 	}
-	
-	promise.then((init) => {
 
-		console.log(' ');
-		console.log('*******************************');
-		console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit - lvl 1');
-		console.log('*******************************');
-		console.log(' ');
+	flawless = false;
 
+	if(promise){
+		promise.then(init => {
+			
+			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit');
 
-		promise = main('filter_submit');
+			promise = false;
 
-		promise.then((init) => {
+			promise_filter_submit = main('filter_submit');
 
-			console.log(' ');
-			console.log('*******************************');
-			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit - lvl 2');
-			console.log('*******************************');
-			console.log(' ');
-
-			filter_applied = true;
-
+			promise_filter_submit.then(init => {
+				
+				if(!reset_flag) flawless = true;
+			});
 		});
-	});
+	} 
+	else if(promise_filter_clear){
+		promise_filter_clear.then(init => {
+			
+			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit');
+
+			promise_filter_clear = false;
+
+			promise_filter_submit = main('filter_submit');
+
+			promise_filter_submit.then(init => {
+				if(!reset_flag) flawless = true;
+			});
+		});
+	}
+
+
 });
 
 filter_clear.addEventListener('click', function(){
@@ -282,40 +287,44 @@ filter_clear.addEventListener('click', function(){
 	});
 
 	filter = false;
-	filter_flag = false; 
 	
 	console.log(' ------- filter_clear.click ---------');
 
-	if(!filter_applied){
-		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на входе');
-		reset_flag = true;
-		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на выходе');
-	} /*else {
-		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на входе');
-		filter_applied = false;
-		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на выходе');
-	}*/
+	if(!flawless) reset = true;
+
 
 	console.log('------------------------------------------------------------------------------------------');
 
-	promise.then((init) => {
+	flawless = false;
 
-		console.log(' ');
-		console.log('*******************************');
-		console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_clear - lvl 1');
-		console.log('*******************************');
-		console.log(' ');
+	if(promise){
+		promise.then(init => {
+			
+			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit');
 
-		promise = main('filter_clear');
+			promise = false;
 
-		promise.then((init) => {
-			console.log(' ');
-			console.log('*******************************');
-			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_clear  - lvl 2');
-			console.log('*******************************');
-			console.log(' ');
+			promise_filter_clear = main('filter_clear');
+
+			promise_filter_clear.then(init => {
+				if(!reset_flag) flawless = true;
+			});
 		});
-	});
+	} 
+	else if(promise_filter_submit){
+		promise_filter_submit.then(init => {
+			
+			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit');
+
+			promise_filter_submit = false;
+
+			promise_filter_clear = main('filter_clear');
+
+			promise_filter_clear.then(init => {
+				if(!reset_flag) flawless = true;
+			});
+		});
+	}	
 
 });
 
