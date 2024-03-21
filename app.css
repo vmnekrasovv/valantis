@@ -75,7 +75,8 @@ html, body {
 }
 
 .filter-submit,
-.filter-clear {
+.filter-clear,
+.stop {
 	padding: 5px 20px;
 	font-weight: 700;
 	font-size: 15px;
@@ -87,6 +88,10 @@ html, body {
 }
 
 .filter-clear {
+	color: #f00;
+}
+
+.stop {
 	color: #f00;
 }
 

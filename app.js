@@ -21,6 +21,7 @@ let reset_flag = false;
 let filter_flag = false;
 let filter = false;
 let filter_applied = false;
+let stop_flag = false;
 
 async function main(initiator){
 
@@ -55,6 +56,10 @@ async function main(initiator){
 			break;
 		}
 
+		else if(stop_flag){
+			break;
+		}
+
 		else { 
 			console.log(' --- reset_flag: ' + reset_flag);
 			console.log(' --- filter_flag: ' + filter_flag);
@@ -68,6 +73,9 @@ async function main(initiator){
 	console.log('filter_flag: ' + filter_flag + ' - на выходе из main');
 	console.log('filter: ' + filter['name'] + ' - на выходе - нужен при перезапуске с применением фильтра');
 	console.log('filter_applied: ' + filter_applied + ' - на выходе');
+	
+	console.log(' ');
+	console.log('initiator: ' + initiator);
 	
 	console.log(' ');
 	console.log('###################### Завершение main ###########################');
@@ -136,7 +144,7 @@ async function get_items(ids){
 
 	console.log('***********************************************************************************************');
 
-	console.log(ids[0], ' ( запуск get_items )');
+	// console.log(ids[0], ' ( запуск get_items )');
 
 	config.body = JSON.stringify({'action': 'get_items', 'params': {'ids': ids}});
 
@@ -152,8 +160,8 @@ async function get_items(ids){
 			response = await fetch(host, config);
 		}
 
-		console.log('Promise resolved and HTTP status is successful - get_items - ( response.ok await fetch() ) - ', ids[0]);
-		console.log('----------------------------------------------------------');
+		//console.log('Promise resolved and HTTP status is successful - get_items - ( response.ok await fetch() ) - ', ids[0]);
+		//console.log('----------------------------------------------------------');
 
 		let items = await response.json();
 		
@@ -178,6 +186,11 @@ async function get_items(ids){
 let filter_input = document.querySelectorAll('.filter-item-input');
 let filter_submit = document.querySelector('.filter-submit');
 let filter_clear = document.querySelector('.filter-clear');
+let stop_button = document.querySelector('.stop');
+
+stop_button.addEventListener('click', function(){
+	stop_flag = true;
+});
 
 
 for(let i = 0; i < filter_input.length; i++){
@@ -204,8 +217,9 @@ for(let i = 0; i < filter_input.length; i++){
 
 filter_submit.addEventListener('click', function(){
 
-	filter = false;
-	filter_flag = false;
+	// повторное применение фильтра, без промежуточного clear
+	//filter = false;
+	//filter_flag = false;
 	
 	for(let i = 0; i < filter_input.length; i++){
 
@@ -243,7 +257,6 @@ filter_submit.addEventListener('click', function(){
 		console.log('*******************************');
 		console.log(' ');
 
-		// filter_flag = false;
 
 		promise = main('filter_submit');
 
@@ -256,7 +269,7 @@ filter_submit.addEventListener('click', function(){
 			console.log(' ');
 
 			filter_applied = true;
-			//filter_flag = false;
+
 		});
 	});
 });
@@ -277,11 +290,11 @@ filter_clear.addEventListener('click', function(){
 		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на входе');
 		reset_flag = true;
 		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на выходе');
-	} else {
+	} /*else {
 		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на входе');
 		filter_applied = false;
 		console.log('filter_applied: ' + filter_applied + ' / reset_flag: ' + reset_flag + ' - на выходе');
-	}
+	}*/
 
 	console.log('------------------------------------------------------------------------------------------');
 
