@@ -17,31 +17,18 @@ let config = {
 }
 
 let page = 1;
-let reset = false;
 let reset_flag = false;
 let filter = false;
-let stop_flag = false;
-let flawless = false;
 
-let promise_filter_submit = false;
-let promise_filter_clear = false;
+let products_list = document.querySelector('.products-list');
+let pagination_list = document.querySelector('.pagination-list');
 
 
-async function main(initiator){
+async function main(){
 
-	reset_flag = false;
-
-	console.log(' ');
-	console.log('########################### Запуск main ###########################');
-	console.log(' ');
-	console.log('initiator: ' + initiator);
-	console.log(' ');
-
-
-	reset_flag_func();
-
-	console.log('reset: ' + reset);
-	console.log('filter: ' + filter['name']);
+	page = 1;
+	products_list.innerHTML = "";
+	pagination_list.innerHTML = "";
 
 	let ids = await get_ids();
 
@@ -49,56 +36,22 @@ async function main(initiator){
 		
 		let items = await get_items(ids.slice(i, i + 50));
 
-		if(reset) {
-			reset = false;
-			reset_flag = true;
+		if(reset_flag) {
 			break;
-		}
-
-		else if(stop_flag){
-			break;
-		}
-
-		else { 
-			console.log(' --- reset: ' + reset);
-			render(items);
-		}
+		} else { render(items) }
 	}
-
-
-
-
-	console.log(' ');
-	console.log('reset: ' +  reset + ' - на выходе из main');
-	console.log('reset_flag: ' +  reset_flag + ' - на выходе из main');
-	console.log('filter: ' + filter['name'] + ' - на выходе - нужен при перезапуске с применением фильтра');
-	
-	console.log(' ');
-	console.log('initiator: ' + initiator);
-	
-	console.log(' ');
-	console.log('###################### Завершение main ###########################');
-	console.log(' ');
-
-	return initiator;
-
 }
 
-let promise = main('main');
-
-
-/////////////////////////////////////////
+let promise = main();
 
 
 // get_ids 
-
 
 async function get_ids(){
 
 	if(filter === false){
 		config.body = JSON.stringify({'action':'get_ids'});		
 	} 
-
 	else {
 
 		let request = {'action':'filter', "params": {}};
@@ -113,16 +66,14 @@ async function get_ids(){
 		let response = await fetch(host, config);
 
 		while (!response.ok) {
+
 			console.log(response.status + " : " + response.statusText);
-			console.log('Promise resolved but HTTP status failed - get_ids');
+			console.log('Promise resolved but HTTP status failed - get_ids - ');
+
 			response = await fetch(host, config);
 		}
 
-		console.log(' ');
-		console.log('========================================================');
-		console.log('Promise resolved and HTTP status is successful - get_ids');
-		console.log('========================================================');
-		console.log(' ');
+		console.log('Promise resolved and HTTP status is successful - get_ids -');
 
 		let ids = await response.json();
 		return ids.result;
@@ -132,17 +83,10 @@ async function get_ids(){
 	}
 }
 
-/////////////////////////////////////////
-
 
 // get_items 
 
-
 async function get_items(ids){
-
-	console.log('***********************************************************************************************');
-
-	// console.log(ids[0], ' ( запуск get_items )');
 
 	config.body = JSON.stringify({'action': 'get_items', 'params': {'ids': ids}});
 
@@ -158,14 +102,10 @@ async function get_items(ids){
 			response = await fetch(host, config);
 		}
 
-		//console.log('Promise resolved and HTTP status is successful - get_items - ( response.ok await fetch() ) - ', ids[0]);
-		//console.log('----------------------------------------------------------');
+		console.log('Promise resolved and HTTP status is successful - get_items -');
 
 		let items = await response.json();
-		
 		items = clean_items(items.result);
-
-		console.log(' ---- return items ---- ', items[0]);
 		
 		return items;
 	} 
@@ -175,20 +115,11 @@ async function get_items(ids){
 	}
 }
 
-
-/////////////////////////////////////////
-
 // фильтер выдачи 
 
-
-let filter_input = document.querySelectorAll('.filter-item-input');
-let filter_submit = document.querySelector('.filter-submit');
-let filter_clear = document.querySelector('.filter-clear');
-let stop_button = document.querySelector('.stop');
-
-stop_button.addEventListener('click', function(){
-	stop_flag = true;
-});
+let filter_input = document.querySelectorAll('.filter-item__input');
+let submit_button = document.querySelector('.submit-button');
+let reset_button = document.querySelector('.reset-button');
 
 
 for(let i = 0; i < filter_input.length; i++){
@@ -213,7 +144,7 @@ for(let i = 0; i < filter_input.length; i++){
 }
 
 
-filter_submit.addEventListener('click', function(){
+submit_button.addEventListener('click', function(){
 	
 	for(let i = 0; i < filter_input.length; i++){
 
@@ -232,8 +163,6 @@ filter_submit.addEventListener('click', function(){
 				filter['value'] = elem.value.trim();
 			}	
 
-			if(!flawless) reset = true;
-
 			break;
 		} 
 	}
@@ -244,42 +173,18 @@ filter_submit.addEventListener('click', function(){
 		}
 	}
 
-	flawless = false;
+	reset_flag = true;
 
-	if(promise){
-		promise.then(init => {
-			
-			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit');
-
-			promise = false;
-
-			promise_filter_submit = main('filter_submit');
-
-			promise_filter_submit.then(init => {
-				
-				if(!reset_flag) flawless = true;
-			});
-		});
-	} 
-	else if(promise_filter_clear){
-		promise_filter_clear.then(init => {
-			
-			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit');
-
-			promise_filter_clear = false;
-
-			promise_filter_submit = main('filter_submit');
-
-			promise_filter_submit.then(init => {
-				if(!reset_flag) flawless = true;
-			});
-		});
-	}
-
-
+	promise.then(() => {
+		reset_flag = false;
+		promise = main();
+	});
 });
 
-filter_clear.addEventListener('click', function(){
+reset_button.addEventListener('click', function(){
+
+	products_list.innerHTML = "";
+	pagination_list.innerHTML = "";
 
 	filter_input.forEach(function(elem){
 		elem.value = '';
@@ -287,65 +192,16 @@ filter_clear.addEventListener('click', function(){
 	});
 
 	filter = false;
-	
-	console.log(' ------- filter_clear.click ---------');
+	reset_flag = true;
 
-	if(!flawless) reset = true;
-
-
-	console.log('------------------------------------------------------------------------------------------');
-
-	flawless = false;
-
-	if(promise){
-		promise.then(init => {
-			
-			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit');
-
-			promise = false;
-
-			promise_filter_clear = main('filter_clear');
-
-			promise_filter_clear.then(init => {
-				if(!reset_flag) flawless = true;
-			});
-		});
-	} 
-	else if(promise_filter_submit){
-		promise_filter_submit.then(init => {
-			
-			console.log('Предыдущий запуск main завершен. Инициатор: ' + init + ' / Проверка в filter_submit');
-
-			promise_filter_submit = false;
-
-			promise_filter_clear = main('filter_clear');
-
-			promise_filter_clear.then(init => {
-				if(!reset_flag) flawless = true;
-			});
-		});
-	}	
-
+	promise.then(() => {
+		reset_flag = false;
+		promise = main();
+	});
 });
 
 
-/////////////////////////////////////////
-
-
-// сброс при изменении полей фильтра 
-
-function reset_flag_func(){
-	page = 1;
-	document.querySelector('.products-list').innerHTML = "";
-	document.querySelector('.pagination-list').innerHTML = "";
-}
-
-
-/////////////////////////////////////////
-
-
-// перебор массива items.result с отсечением дублей по айди
-
+// отсечение дублей айди в items.result
 
 function clean_items(items){
 
@@ -371,11 +227,8 @@ function clean_items(items){
 	return items;
 }
 
-/////////////////////////////////////////
-
 
 // рендер айтем бокса
-
 
 function render_itemBox(){
 
@@ -389,9 +242,6 @@ function render_itemBox(){
 
 	document.querySelector('.products-list').append(item_box);
 }
-
-
-/////
 
 
 // рендер элементов 
@@ -424,7 +274,6 @@ function render_items(items_item){
 	document.querySelector('.item-box-'+page).append(item);
 }
 
-/////
 
 // рендер пагинации
 
@@ -437,7 +286,6 @@ function render_pagination(){
 		document.querySelector('.pagination-list').append(pagination_page);
 }
 
-/////
 
 // рендер всего
 
@@ -452,20 +300,12 @@ function render(items){
 	render_pagination();
 
 	page++;
-
-	console.log('*************************************** render complete ***************************************');
-	console.log(' ');
 }
-
-/////////////////////////////////////////
 
 
 // событие клика по элементам пагинации
 
-let pagination = document.querySelector('.pagination-list');
-
-
-pagination.addEventListener('DOMNodeInserted', function(event) {
+pagination_list.addEventListener('DOMNodeInserted', function(event) {
 	
 	if(event.target.classList.contains('pagination-page')){
 
@@ -482,8 +322,3 @@ pagination.addEventListener('DOMNodeInserted', function(event) {
 	}
 
 }, false);
-
-
-/////////////////////////////////////////
-
-

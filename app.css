@@ -60,11 +60,11 @@ html, body {
 	align-items: center;
 }
 
-.filter-item-input {
+.filter-item__input {
 	padding: 7px 10px;
 }
 
-.filter-item-input:disabled {
+.filter-item__input:disabled {
 	background: #333;
 	color: #9fe11f;
 }
@@ -74,24 +74,22 @@ html, body {
 	gap: 20px;
 }
 
-.filter-submit,
-.filter-clear,
-.stop {
+.submit-button,
+.reset-button {
 	padding: 5px 20px;
 	font-weight: 700;
 	font-size: 15px;
 	user-select: none;
 	cursor: pointer;
 	background: #333;
-    color: #9fe11f;
     border-radius: 5px;
 }
 
-.filter-clear {
-	color: #f00;
+.submit-button {
+	color: #9fe11f;
 }
 
-.stop {
+.reset-button {
 	color: #f00;
 }
 
@@ -108,11 +106,6 @@ html, body {
 	position: relative;
 	background: #242424;
 }
-
-/*.products-list {
-	max-height: 150px;
-	overflow: hidden;
-}*/
 
 .pagination {
 	width: 100%;
@@ -157,7 +150,7 @@ html, body {
 	display: none;
 }
 
-.item-box.active{
+.item-box.active {
 	display: block;
 }
 
@@ -213,8 +206,8 @@ html, body {
 		min-width: 70px;
 	}
 
-	.filter-submit,
-	.filter-clear {
+	.submit-button,
+	.reset-button {
 		width: 127px;
 		text-align: center;
 		padding: 7px;
