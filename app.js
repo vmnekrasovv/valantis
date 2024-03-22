@@ -36,9 +36,13 @@ async function main(){
 		
 		let items = await get_items(ids.slice(i, i + 50));
 
-		if(reset_flag) {
+		/*if(items){
+			render(items);
+		}*/
+
+		/*if(reset_flag) {
 			break;
-		} else { render(items) }
+		} else { render(items) }*/
 	}
 }
 
@@ -86,7 +90,12 @@ async function get_ids(){
 
 // get_items 
 
+let controller = new AbortController();
+
 async function get_items(ids){
+
+	
+	config.signal = controller.signal;
 
 	config.body = JSON.stringify({'action': 'get_items', 'params': {'ids': ids}});
 
@@ -111,6 +120,9 @@ async function get_items(ids){
 	} 
 
 	catch (error) {
+		promise.then(() => {
+			promise = main();
+		});
 		console.log(error);
 	}
 }
@@ -192,12 +204,16 @@ reset_button.addEventListener('click', function(){
 	});
 
 	filter = false;
-	reset_flag = true;
+	/*reset_flag = true;
 
 	promise.then(() => {
 		reset_flag = false;
 		promise = main();
-	});
+	});*/
+
+	controller.abort();
+
+
 });
 
 
