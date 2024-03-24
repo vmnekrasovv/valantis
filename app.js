@@ -107,6 +107,8 @@ async function get_items (ids, signal) {
 	let items = await response.json();
 	items = clean_items(items.result);
 
+	console.log(items);
+
 	return items;
 }
 
@@ -194,25 +196,17 @@ reset_button.addEventListener('click', function () {
 function clean_items (items) {
 
 	let clean_items = [];
+	let set = new Set();
 
 	for (let i = 0; i < items.length; i++) {
 
-		let unique = 1;
-
-		for (let key in clean_items) {
-			key === items[i]['id'] ? unique = 0 : unique = 1;
+		if(!set.has(items[i]['id'])){
+			set.add(items[i]['id']);
+			clean_items.push(items[i]);
 		}
-
-		unique == 1 ? clean_items[items[i]['id']] = items[i] : false;
 	}
 
-	items = [];
-
-	for (let key in clean_items) {
-		items.push(clean_items[key]);
-	}
-
-	return items;
+	return clean_items;
 }
 
 
