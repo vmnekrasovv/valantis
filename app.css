@@ -107,6 +107,11 @@ html, body {
 	background: #242424;
 }
 
+/*.products-list {
+	max-height: 150px;
+	overflow: hidden;
+}*/
+
 .pagination {
 	width: 100%;
 	min-height: 80px;
