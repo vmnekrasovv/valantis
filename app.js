@@ -105,11 +105,11 @@ async function get_items (ids, signal) {
 	console.log('Promise resolved and HTTP status is successful - get_items -');
 
 	let items = await response.json();
-	items = clean_items(items.result);
 
-	console.log(items);
-
-	return items;
+	return [...(new Map(items.result.map(item=>[item.id, item]))).values()];
+	
+	/*items = clean_items(items.result);
+	return items;*/
 }
 
 // фильтер выдачи 
@@ -193,7 +193,8 @@ reset_button.addEventListener('click', function () {
 
 // отсечение дублей айди в items.result
 
-function clean_items (items) {
+/*function clean_items (items) {
+
 
 	let clean_items = [];
 	let set = new Set();
@@ -208,7 +209,7 @@ function clean_items (items) {
 
 	return clean_items;
 }
-
+*/
 
 // рендер айтем бокса
 
